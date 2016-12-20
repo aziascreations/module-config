@@ -16,7 +16,7 @@ public class Config {
 	private final static Logger logger = LoggerFactory.getLogger(Config.class);
 	protected final String id = "config.default";
 	protected String configFileName, configFileLocation;
-	//protected boolean hasBeenLoaded;
+	protected boolean hasBeenLoaded;
 	
 	// Config "fields"
 	protected HashMap<String, String> defautsString;
@@ -32,9 +32,9 @@ public class Config {
 	
 	public Config(String configFileLocation) throws ConfigException {
 		//Couldn't use "this.id" in the "this(var, var)" constructor.
-		this.configFileName = this.getId();
+		this.configFileName = this.id;
 		this.configFileLocation = configFileLocation;
-		//this.hasBeenLoaded = false;
+		this.hasBeenLoaded = false;
 		
 		this.initializeFields();
 		this.registerFields();
@@ -43,7 +43,7 @@ public class Config {
 	public Config(String configFileName, String configFileLocation) throws ConfigException {
 		this.configFileName = configFileName;
 		this.configFileLocation = configFileLocation;
-		//this.hasBeenLoaded = false;
+		this.hasBeenLoaded = false;
 		
 		this.initializeFields();
 		this.registerFields();
@@ -80,7 +80,7 @@ public class Config {
 				} else if(this.defautsBoolean.containsKey(e.getKey())) {
 					this.defautsBoolean.put(e.getKey(), e.getValue().getAsBoolean());
 				} else {
-					logger.warn("No config entry found for {}", e.getKey());
+					logger.warn("Unable to process {}:{}", this.id, e.getKey());
 				}
 			}
 		} catch(JsonSyntaxException jse) {
@@ -90,16 +90,20 @@ public class Config {
 		}
 		
 		logger.info("Config {} loaded.", this.id);
-		//this.hasBeenLoaded = true;
+		this.hasBeenLoaded = true;
 		return true;
 	}
 	
-	protected boolean saveConfig() {
-		return this.saveConfig(true);
-	}
-	
-	protected boolean saveConfig(boolean eraseExistingConfig) {
-		return false;
+	@Deprecated
+	protected String getJsonConfig() {
+		//JsonObject jsonObj = new JsonObject();
+		/*Iterator it = mp.entrySet().iterator();
+	    while (it.hasNext()) {
+	        Map.Entry pair = (Map.Entry)it.next();
+	        System.out.println(pair.getKey() + " = " + pair.getValue());
+	        it.remove(); // avoids a ConcurrentModificationException
+	    }/**/
+		return "";
 	}
 	
 	protected void registerString(String name, String defaultValue) throws ConfigException {
@@ -136,7 +140,7 @@ public class Config {
 	
 	protected String getString(String key) {
 		if(Strings.isNullOrEmpty(key)) {
-			logger.warn("Requested String from {}:{} with a null or empty key.\nReturning empty String.", this.id, key);
+			logger.warn("Requested String from {}:{} with a null or empty key.\nReturning an empty String.", this.id, key);
 			return "";
 		}
 		String result;
@@ -214,43 +218,11 @@ public class Config {
 		return result;
 	}
 	
-	//TODO: clean this - Should I use labels and gotos ? - Might as well light candles and summon Satan while we are at it...
-	/*protected String getString(String key) {
-		if(!this.hasBeenLoaded) {
-			logger.warn("Retrieving config field from unloaded config {}", this.id);
-			String value = this.defautsString.get(key);
-			if(Strings.isNullOrEmpty(value)) {
-				logger.error("Received a null||empty String from the default config, you are fucked, sorry.");
-				return null;
-			} else {
-				return value;
-			}
-		} else {
-			if(!this.fieldsString.containsKey(key)) {
-				logger.debug("Returning default value for: {} in {}", key, this.id);
-				String value = this.defautsString.get(key);
-				if(Strings.isNullOrEmpty(value)) {
-					logger.error("Received a null||empty String from the default config, you are fucked, sorry.");
-					return null;
-				} else {
-					return value;
-				}
-			}
-			String value = this.fieldsString.get(key);
-			if(Strings.isNullOrEmpty(value)) {
-				logger.error("Received a null||empty String from the \"custom\" config, sending null");
-				return null;
-			} else {
-				return value;
-			}
-		}
-	}/**/
-	
 	public String getId() {
 		return this.id;
 	}
 	
-	/*public void setLoadedState(boolean status) {
-		this.hasBeenLoaded = status;
-	}/**/
+	public boolean isLoaded() {
+		return this.hasBeenLoaded;
+	}
 }
